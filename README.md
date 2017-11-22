@@ -1,12 +1,10 @@
 # esx_realweapons
 ESX RealWeapons
 
-[THIS IS A W.I.P.]
-
 [TODO]
+Configure all the positions ... of all the weapons
 
-1) Hide the weapon when it's in player's hands
-2) Configure all the positions ... of all the weapons
+So please PR when you guys made it. Thanks.
 
 [INSTALLATION]
 
