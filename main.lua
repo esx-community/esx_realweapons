@@ -1,5 +1,6 @@
 ESX = nil
 local Weapons = {}
+local Loaded = false
 -----------------------------------------------------------
 -----------------------------------------------------------
 Citizen.CreateThread(function()
@@ -8,40 +9,48 @@ Citizen.CreateThread(function()
 		Wait(0)
 	end
 
-	--SetGears()
+	while not Loaded do
+		Wait(250)
+	end
 
 	while true do
 		local playerPed = GetPlayerPed(-1)
 
 		for i=1, #Config.RealWeapons, 1 do
+
     		local weaponHash = GetHashKey(Config.RealWeapons[i].name)
+
     		if HasPedGotWeapon(playerPed, weaponHash, false) then
-    			local found = false
-      			for weaponName, entity in pairs(Weapons) do
+    			local onPlayer = false
+
+				for weaponName, entity in pairs(Weapons) do
       				if weaponName == Config.RealWeapons[i].name then
-      					found = true
+      					onPlayer = true
       					break
       				end
       			end
-      			if not found then
-      				SetGear(Config.RealWeapons[i].name)
-      				break
+	      		
+      			if not onPlayer and weaponHash ~= GetSelectedPedWeapon(playerPed) then
+	      			SetGear(Config.RealWeapons[i].name)
+      			elseif onPlayer and weaponHash == GetSelectedPedWeapon(playerPed) then
+	      			RemoveGear(Config.RealWeapons[i].name)
       			end
+
     		end
   		end
-		Wait(250)
+		Wait(500)
 	end
 end)
 -----------------------------------------------------------
 -----------------------------------------------------------
 AddEventHandler('skinchanger:modelLoaded', function()
 	SetGears()
+	Loaded = true
 end)
 -----------------------------------------------------------
 -----------------------------------------------------------
 RegisterNetEvent('esx:removeWeapon')
 AddEventHandler('esx:removeWeapon', function(weaponName)
-	--TriggerServerEvent('esx:clientLog', "[REMOVE WEAPON] " .. weaponName)
 	RemoveGear(weaponName)
 end)
 -----------------------------------------------------------
@@ -51,16 +60,15 @@ function RemoveGear(weapon)
 	local _Weapons = {}
 
 	for weaponName, entity in pairs(Weapons) do
-		--TriggerServerEvent('esx:clientLog', "[RM] " .. weaponName .. ' ' .. weapon)
 		if weaponName ~= weapon then
 			_Weapons[weaponName] = entity
 		else
 			ESX.Game.DeleteObject(entity)
-			--DeleteObject(entity)
 		end
 	end
 
 	Weapons = _Weapons
+	TriggerServerEvent('esx:clientLog', "[WEAPON REMOVED] " .. weapon)
 end
 -----------------------------------------------------------
 -----------------------------------------------------------
@@ -70,12 +78,12 @@ function RemoveGears()
 		ESX.Game.DeleteObject(entity)
 	end
 	Weapons = {}
+	TriggerServerEvent('esx:clientLog', "[GEAR REMOVED] ")
 end
 -----------------------------------------------------------
 -----------------------------------------------------------
 -- Add one weapon on the ped
 function SetGear(weapon)
-	TriggerServerEvent('esx:clientLog', "[SetGear] " .. weapon)
 	local bone       = nil
 	local boneX      = 0.0
 	local boneY      = 0.0
@@ -113,6 +121,7 @@ function SetGear(weapon)
 		Weapons[weapon] = obj
 		TriggerServerEvent('esx:clientLog', "[SetGear] ATTACHED")
 	end)
+	TriggerServerEvent('esx:clientLog', "[SET GEAR] " .. weapon)
 end
 -----------------------------------------------------------
 -----------------------------------------------------------
