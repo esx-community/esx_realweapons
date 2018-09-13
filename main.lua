@@ -1,60 +1,57 @@
 ESX = nil
 local Weapons = {}
 local Loaded = false
------------------------------------------------------------
------------------------------------------------------------
+
 Citizen.CreateThread(function()
 	while ESX == nil do
 		TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
-		Wait(0)
+		Citizen.Wait(0)
 	end
 
 	while not Loaded do
-		Wait(250)
+		Citizen.Wait(500)
 	end
 
 	while true do
-		local playerPed = GetPlayerPed(-1)
+
+		Citizen.Wait(500)
+		local playerPed = PlayerPedId()
 
 		for i=1, #Config.RealWeapons, 1 do
 
-    		local weaponHash = GetHashKey(Config.RealWeapons[i].name)
+			local weaponHash = GetHashKey(Config.RealWeapons[i].name)
 
-    		if HasPedGotWeapon(playerPed, weaponHash, false) then
-    			local onPlayer = false
+			if HasPedGotWeapon(playerPed, weaponHash, false) then
+				local onPlayer = false
 
 				for weaponName, entity in pairs(Weapons) do
-      				if weaponName == Config.RealWeapons[i].name then
-      					onPlayer = true
-      					break
-      				end
-      			end
-	      		
-      			if not onPlayer and weaponHash ~= GetSelectedPedWeapon(playerPed) then
-	      			SetGear(Config.RealWeapons[i].name)
-      			elseif onPlayer and weaponHash == GetSelectedPedWeapon(playerPed) then
-	      			RemoveGear(Config.RealWeapons[i].name)
-      			end
+					if weaponName == Config.RealWeapons[i].name then
+						onPlayer = true
+						break
+					end
+				end
 
-    		end
-  		end
-		Wait(500)
+				if not onPlayer and weaponHash ~= GetSelectedPedWeapon(playerPed) then
+					SetGear(Config.RealWeapons[i].name)
+				elseif onPlayer and weaponHash == GetSelectedPedWeapon(playerPed) then
+					RemoveGear(Config.RealWeapons[i].name)
+				end
+
+			end
+		end
 	end
 end)
------------------------------------------------------------
------------------------------------------------------------
+
 AddEventHandler('skinchanger:modelLoaded', function()
 	SetGears()
 	Loaded = true
 end)
------------------------------------------------------------
------------------------------------------------------------
+
 RegisterNetEvent('esx:removeWeapon')
 AddEventHandler('esx:removeWeapon', function(weaponName)
 	RemoveGear(weaponName)
 end)
------------------------------------------------------------
------------------------------------------------------------
+
 -- Remove only one weapon that's on the ped
 function RemoveGear(weapon)
 	local _Weapons = {}
@@ -68,20 +65,16 @@ function RemoveGear(weapon)
 	end
 
 	Weapons = _Weapons
-	TriggerServerEvent('esx:clientLog', "[WEAPON REMOVED] " .. weapon)
 end
------------------------------------------------------------
------------------------------------------------------------
+
 -- Remove all weapons that are on the ped
 function RemoveGears()
 	for weaponName, entity in pairs(Weapons) do
 		ESX.Game.DeleteObject(entity)
 	end
 	Weapons = {}
-	TriggerServerEvent('esx:clientLog', "[GEAR REMOVED] ")
 end
------------------------------------------------------------
------------------------------------------------------------
+
 -- Add one weapon on the ped
 function SetGear(weapon)
 	local bone       = nil
@@ -91,10 +84,10 @@ function SetGear(weapon)
 	local boneXRot   = 0.0
 	local boneYRot   = 0.0
 	local boneZRot   = 0.0
-	local playerPed  = GetPlayerPed(-1)
+	local playerPed  = PlayerPedId()
 	local model      = nil
 	local playerData = ESX.GetPlayerData()
-		
+
 	for i=1, #Config.RealWeapons, 1 do
 		if Config.RealWeapons[i].name == weapon then
 			bone     = Config.RealWeapons[i].bone
@@ -113,18 +106,14 @@ function SetGear(weapon)
 		x = x,
 		y = y,
 		z = z
-	}, function(obj)
-		local playerPed = GetPlayerPed(-1)
+	}, function(object)
 		local boneIndex = GetPedBoneIndex(playerPed, bone)
 		local bonePos 	= GetWorldPositionOfEntityBone(playerPed, boneIndex)
-		AttachEntityToEntity(obj, playerPed, boneIndex, boneX, boneY, boneZ, boneXRot, boneYRot, boneZRot, false, false, false, false, 2, true)
-		Weapons[weapon] = obj
-		TriggerServerEvent('esx:clientLog', "[SetGear] ATTACHED")
+		AttachEntityToEntity(object, playerPed, boneIndex, boneX, boneY, boneZ, boneXRot, boneYRot, boneZRot, false, false, false, false, 2, true)
+		Weapons[weapon] = object
 	end)
-	TriggerServerEvent('esx:clientLog', "[SET GEAR] " .. weapon)
 end
------------------------------------------------------------
------------------------------------------------------------
+
 -- Add all the weapons in the xPlayer's loadout
 -- on the ped
 function SetGears()
@@ -135,7 +124,7 @@ function SetGears()
 	local boneXRot   = 0.0
 	local boneYRot   = 0.0
 	local boneZRot   = 0.0
-	local playerPed  = GetPlayerPed(-1)
+	local playerPed  = PlayerPedId()
 	local model      = nil
 	local playerData = ESX.GetPlayerData()
 	local weapon 	 = nil
@@ -166,23 +155,20 @@ function SetGears()
 			x = x,
 			y = y,
 			z = z
-		}, function(obj)
-			
-			local playerPed = GetPlayerPed(-1)
+		}, function(object)
 			local boneIndex = GetPedBoneIndex(playerPed, bone)
 			local bonePos 	= GetWorldPositionOfEntityBone(playerPed, boneIndex)
 
-			AttachEntityToEntity(obj, playerPed, boneIndex, boneX, boneY, boneZ, boneXRot, boneYRot, boneZRot, false, false, false, false, 2, true)						
+			AttachEntityToEntity(object, playerPed, boneIndex, boneX, boneY, boneZ, boneXRot, boneYRot, boneZRot, false, false, false, false, 2, true)
 
-			Weapons[weapon] = obj
-
+			Weapons[weapon] = object
 			_wait = false
-
 		end)
 
+		-- wait for async task
 		while _wait do
-			Wait(0)
+			Citizen.Wait(10)
 		end
-    end
+	end
 
 end
